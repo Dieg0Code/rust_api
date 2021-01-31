@@ -1,5 +1,7 @@
 # Rocket Overview
 
+Rocket hace un uso abundante de las extensiones de sintaxis de Rust y otras funciones avanzadas e inestables. Debido a esto, necesitaremos usar la **nightly** 
+
 ## Routing
 
 ##### fuente original [aqui](https://rocket.rs/v0.4/overview/)
@@ -45,3 +47,51 @@ fn login(user_form: Form<UserLogin>) -> String {
 
 La ruta `login` de arriba dice que esta esperando `data` de tipo `From<UserLogin>` en el parámetro `user_form`. El tipo **Form** es un tipo integrado de Rocket que sabe cómo parsear (knows how to parse) forms en estructuras. Rocket intentara automáticamente parsear el request body en el `form` y llamar al `login` handler si es que el parsing tiene éxito. Otros tipos `FromData` incorporados son `Data`, `Json`, y `Flash`.
 
+## Request Guards
+
+Adicional a dynamic path y data parameters,los request handlers pueden también contener un tercer tipo de parámetro: requests guards. Request guards no son declarados en el route attribute, y cualquier numero de ellos puede aparecer en el request handler signature.
+
+Los Request guards protegen al handler de la ejecución a menos que los metadatos de la solicitud entrante cumplan un conjunto de condiciones. Por ejemplo, si está escribiendo una API que requiere que las llamadas sensibles vayan acompañadas de una clave API en el encabezado de la solicitud, Rocket puede proteger estas llamadas por medio de una custom `ApiKey` request guard:
+
+```Rust
+#[get("/sensitive")]
+fn sensitive(key: ApiKey) { ... }
+```
+
+`ApiKey` protege el `sensitive` handler de ejecutarse incorrectamente. ara que Rocket llame al `sensitive` handler, el `ApiKey` type necesita ser derivado mediante una implementación `FromRequest`, la cual en este caso, valida el API header, Request guard es un poderoso y único concepto de Rocket.
+
+## Responders
+
+El tipo que retorna un request handler puede ser cualquier tipo que implemente Responder:
+
+```Rust
+#[get("/")]
+fn route() -> T { ... }
+```
+
+Arriba, T debe implementar `Responder`. Rocket implementa `Responder` para varios de los tipos de la biblioteca estándar incluyendo `&str`, `String`, `File`, `Option`, y `Result`. Rocket también implementa responders personalizados como **Redirect**, **Flash** y **Template**.
+
+La tarea de un `Responder` es generar un `Response`, si es posible. Los `Responder` pueden fallar con un status code. Cuando lo hacen, Rocket llama el correspondiente error catcher, un `catch` route, el cual puede ser declarado de la siguiente forma:
+
+```Rust
+#[catch(404)]
+fn not_found() -> T { ... }
+```
+
+## Launching
+
+Para que Rocket comience a enviar solicitudes a las rutas, las rutas necesitan ser montadas. Después de ser montadas, la aplicación debe ser lanzada, estos dos pasos usualmente se hace en el `main`:
+
+```Rust
+rocket::ignite()
+   .mount("/base", routes![index, another])
+   .launch();
+```
+
+El `mount` call toma una ruta base y un conjunto de rutas a través la macro `routes!`. La ruta base (`/base` de arriba) se antepone a la ruta en la lista. Esto efectivamente asigna nombres a las rutas, lo que permite una composición más sencilla.
+
+La `launch` call inicia el server. En desarrollo, Rocket imprime informacion util en la consola para hacerte saber que todo esta bien.
+
+```bash
+🚀  Rocket has launched from http://localhost:8000
+```
