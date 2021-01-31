@@ -2,6 +2,8 @@
 
 ## Routing
 
+##### fuente original [aqui](https://rocket.rs/v0.4/overview/)
+
 La tarea principal de Rocket es enrutar las solicitudes entrantes al handler/manejador apropiado usando las rutas declaradas en la aplicación. Las rutas son declaradas usando el "Rocket's route attribute". El atributo describe la solicitud que coincide con la ruta. El atributo es colocado sobre una función la cual es el "request handler/manejador de solicitud" para esa ruta.
 
 Ejemplo de una ruta simple
@@ -42,3 +44,4 @@ fn login(user_form: Form<UserLogin>) -> String {
 ```
 
 La ruta `login` de arriba dice que esta esperando `data` de tipo `From<UserLogin>` en el parámetro `user_form`. El tipo **Form** es un tipo integrado de Rocket que sabe cómo parsear (knows how to parse) forms en estructuras. Rocket intentara automáticamente parsear el request body en el `form` y llamar al `login` handler si es que el parsing tiene éxito. Otros tipos `FromData` incorporados son `Data`, `Json`, y `Flash`.
+
